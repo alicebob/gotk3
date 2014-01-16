@@ -55,8 +55,8 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"github.com/visionect/gotk3/gdk"
-	"github.com/visionect/gotk3/glib"
+	"github.com/sqs/gotk3/gdk"
+	"github.com/sqs/gotk3/glib"
 	"runtime"
 	"unsafe"
 )

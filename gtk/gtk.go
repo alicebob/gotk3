@@ -45,8 +45,12 @@
 package gtk
 
 // #cgo pkg-config: gtk+-3.0
+// #cgo pkg-config: cairo
 // #include <gtk/gtk.h>
 // #include "gtk.go.h"
+// #include <cairo/cairo-pdf.h>
+// #include <cairo/cairo-ps.h>
+// #include <cairo/cairo-svg.h>
 import "C"
 import (
 	"errors"
@@ -4186,8 +4190,14 @@ func (v *Widget) Unmap() {
 	C.gtk_widget_unmap(v.Native())
 }
 
-//void gtk_widget_realize(GtkWidget *widget);
-//void gtk_widget_unrealize(GtkWidget *widget);
+//Realize is wraper around void gtk_widget_realize(GtkWidget *widget);
+func (v *Widget) Realize() {
+    C.gtk_widget_realize(v.toWidget())
+}
+//Unrealize is a wraper around void gtk_widget_unrealize(GtkWidget *widget);
+func (v *Widget) Unrealize() {
+    C.gtk_widget_unrealize(v.toWidget())
+}
 //void gtk_widget_draw(GtkWidget *widget, cairo_t *cr);
 //void gtk_widget_queue_resize(GtkWidget *widget);
 //void gtk_widget_queue_resize_no_redraw(GtkWidget *widget);
@@ -4469,6 +4479,113 @@ func (v *Widget) GetVExpand() bool {
 func (v *Widget) SetVExpand(expand bool) {
 	C.gtk_widget_set_vexpand(v.Native(), gbool(expand))
 }
+
+/*
+* GtkOffscreenWindow
+*/
+type OffscreenWindow struct {
+    Window
+}
+
+// Native() returns a pointer to the underlying GtkWindow.
+func (v *OffscreenWindow) Native() *C.GtkOffscreenWindow {
+	if v == nil || v.GObject == nil {
+		return nil
+	}
+	p := unsafe.Pointer(v.GObject)
+	return C.toGtkOffscreenWindow(p)
+}
+
+func (v *OffscreenWindow) toOffscreenWindow() *C.GtkOffscreenWindow {
+	if v == nil {
+		return nil
+	}
+	return v.Native()
+}
+
+func wrapOffscreenWindow(obj *glib.Object) *OffscreenWindow {
+	return &OffscreenWindow{Window{Bin{Container{Widget{glib.InitiallyUnowned{obj}}}}}}
+}
+
+// OffscreenWindowNew() is a wrapper around gtk_offscreen_window_new().
+func OffscreenWindowNew() (*OffscreenWindow, error) {
+	c := C.gtk_offscreen_window_new()
+	if c == nil {
+		return nil, nilPtrErr
+	}
+	obj := &glib.Object{glib.ToGObject(unsafe.Pointer(c))}
+	ow := wrapOffscreenWindow(obj)
+	obj.RefSink()
+	runtime.SetFinalizer(obj, (*glib.Object).Unref)
+	return ow, nil
+}
+
+
+//GetPixbuf() is a wrap around GdkPixbuf* gtk_offscreen_window_get_pixbuf (GtkOffscreenWindow *offscreen);
+func (v *OffscreenWindow) GetPixbuf() (*gdk.Pixbuf, error) {
+    var c *C.GdkPixbuf
+    c = C.gtk_offscreen_window_get_pixbuf(v.toOffscreenWindow())
+	if c == nil {
+		return nil, nilPtrErr
+	}
+	obj := &glib.Object{glib.ToGObject(unsafe.Pointer(c))}
+	pb := &gdk.Pixbuf{obj}
+	obj.RefSink()
+	runtime.SetFinalizer(obj, (*glib.Object).Unref)
+	return pb, nil
+
+}
+
+//GetSurface is a wrap for cairo_surface_t* gtk_offscreen_window_get_surface(GtkOffscreenWindow *offscreen);
+func (v *OffscreenWindow) GetSurface() (*CairoSurface, error) {
+    var s *C.cairo_surface_t
+    var c *C.cairo_t
+
+    s = C.gtk_offscreen_window_get_surface(v.toOffscreenWindow())
+	if s == nil {
+		return nil, errors.New("cgo C.gtk_offscreen_window_get_surface() returned unexpected nil pointer")
+	}
+    s = C.cairo_surface_reference(s)
+    c = C.cairo_create(s)
+	if c == nil {
+		return nil, errors.New("cgo C.cairo_create() returned unexpected nil pointer")
+	}
+    cs := &CairoSurface{surface : s, context : c}
+	runtime.SetFinalizer(cs, (*CairoSurface).Destroy)
+    return cs, nil
+}
+
+type CairoSurface struct {
+    surface *C.cairo_surface_t
+    context *C.cairo_t
+}
+
+func (cs *CairoSurface) Reference() {
+    if cs.surface != nil {
+        cs.surface = C.cairo_surface_reference(cs.surface)
+    }
+    if cs.context != nil {
+        cs.context = C.cairo_reference(cs.context)
+    }
+}
+
+func (cs *CairoSurface) Destroy() {
+    if cs.surface != nil {
+        C.cairo_surface_destroy(cs.surface)
+     }
+    if cs.context != nil {
+        C.cairo_destroy(cs.context)
+    }
+}
+
+func (cs *CairoSurface) GetCSurface() *C.cairo_surface_t {
+    return cs.surface
+}
+
+func (cs *CairoSurface) GetCContext() *C.cairo_t{
+    return cs.context
+}
+
 
 /*
  * GtkWindow

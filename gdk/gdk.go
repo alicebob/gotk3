@@ -23,7 +23,7 @@ package gdk
 import "C"
 import (
 	"errors"
-	"github.com/sqs/gotk3/glib"
+	"github.com/alicebob/gotk3/glib"
 	"reflect"
 	"runtime"
 	"unsafe"

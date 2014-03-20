@@ -57,8 +57,8 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"github.com/sqs/gotk3/gdk"
-	"github.com/sqs/gotk3/glib"
+	"github.com/alicebob/gotk3/gdk"
+	"github.com/alicebob/gotk3/glib"
 	"runtime"
 	"unsafe"
 )

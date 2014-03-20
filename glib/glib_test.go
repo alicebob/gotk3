@@ -1,8 +1,8 @@
 package glib_test
 
 import (
-	"github.com/sqs/gotk3/glib"
-	"github.com/sqs/gotk3/gtk"
+	"github.com/alicebob/gotk3/glib"
+	"github.com/alicebob/gotk3/gtk"
 	"runtime"
 	"testing"
 )
